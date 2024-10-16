@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 import javax.swing.*;
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
 
 public class GamePanel extends JPanel implements ActionListener {
 
@@ -63,6 +66,7 @@ public class GamePanel extends JPanel implements ActionListener {
         running = true;
         startScreen = false; // Hide start screen
         timer.start(); // Start the game timer
+        playStart("/Users/alwn/IdeaProjects/Snake/start.wav"); // Game start sound effect
     }
 
     public void restartGame() {
@@ -116,18 +120,40 @@ public class GamePanel extends JPanel implements ActionListener {
             // Draw snake
             for (int i = 0; i < bodyParts; i++) {
                 if (i == 0) {
+                    // Draw the snake head with a more detailed design
                     g.setColor(new Color(52, 93, 207)); // Snake head
-                    g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
-                    g.setColor(Color.white); // Snake eyes
-                    g.fillOval(x[0] + UNIT_SIZE / 4, y[0] + UNIT_SIZE / 4, UNIT_SIZE / 5, UNIT_SIZE / 5);
-                    g.fillOval(x[0] + UNIT_SIZE / 2, y[0] + UNIT_SIZE / 4, UNIT_SIZE / 5, UNIT_SIZE / 5);
+                    g.fillRoundRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE, 15, 15); // Rounded head for a smoother look
+
+                    // Draw eyes with pupils
+                    g.setColor(Color.white); // White part of eyes
+                    g.fillOval(x[0] + UNIT_SIZE / 4, y[0] + UNIT_SIZE / 4, UNIT_SIZE / 3, UNIT_SIZE / 3); // Left eye
+                    g.fillOval(x[0] + UNIT_SIZE / 2, y[0] + UNIT_SIZE / 4, UNIT_SIZE / 3, UNIT_SIZE / 3); // Right eye
+
+                    g.setColor(Color.black); // Pupils
+                    g.fillOval(x[0] + UNIT_SIZE / 3, y[0] + UNIT_SIZE / 3, UNIT_SIZE / 8, UNIT_SIZE / 8); // Left pupil
+                    g.fillOval(x[0] + UNIT_SIZE / 2 + UNIT_SIZE / 8, y[0] + UNIT_SIZE / 3, UNIT_SIZE / 8, UNIT_SIZE / 8); // Right pupil
+
+                    // Add nostrils
+                    g.setColor(Color.black);
+                    g.fillOval(x[0] + UNIT_SIZE / 3, y[0] + UNIT_SIZE / 2, UNIT_SIZE / 10, UNIT_SIZE / 10); // Left nostril
+                    g.fillOval(x[0] + UNIT_SIZE / 2 + UNIT_SIZE / 8, y[0] + UNIT_SIZE / 2, UNIT_SIZE / 10, UNIT_SIZE / 10); // Right nostril
+
+                    // Draw mouth
                     g.setColor(new Color(173, 42, 57));
-                    g.fillRect(x[0] + (UNIT_SIZE - 16), y[0] + (UNIT_SIZE - 10), UNIT_SIZE / 4, UNIT_SIZE / 5);
+                    g.fillRect(x[0] + 8, y[0] + (UNIT_SIZE - 5), UNIT_SIZE / 2, UNIT_SIZE / 8); // Original tongue (base)
                 } else {
                     g.setColor(new Color(81, 121, 230)); // Snake body
                     g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
                     g.setColor(new Color(52, 93, 230)); // Snake body outline
                     g.drawRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+                    g.setColor(new Color(52, 93, 207));
+
+                    for(int j = 0; j < 3; j++) {
+                        g.drawArc(x[i] + 8 * j, y[i], UNIT_SIZE / 3, UNIT_SIZE / 3, 0, 180);
+                        g.drawArc(x[i] + 8 * j + 5, y[i]+8, UNIT_SIZE / 3, UNIT_SIZE / 3, 0, 180);
+                        g.drawArc(x[i] + 8 * j, y[i]+16, UNIT_SIZE / 3, UNIT_SIZE / 3, 0, 180);
+                    }
+
                 }
             }
         }
@@ -142,6 +168,8 @@ public class GamePanel extends JPanel implements ActionListener {
         g.setColor(new Color(232, 252, 236));
         g.setFont(new Font("ArcadeClassic", Font.PLAIN, 40));
         g.drawString("High Scores:", 190, 220);
+
+        playEnd("/Users/alwn/IdeaProjects/Snake/gameover.wav"); //End Sound Effect
 
         // Display the top 5 high scores
         ArrayList<Integer> highScores = highScoreManager.getHighScores();
@@ -190,6 +218,7 @@ public class GamePanel extends JPanel implements ActionListener {
         if (x[0] == applex && y[0] == appley) {
             bodyParts++;
             applesEaten++;
+            playSound("/Users/alwn/IdeaProjects/Snake/eat.wav");
             newApple();
         }
     }
@@ -225,6 +254,9 @@ public class GamePanel extends JPanel implements ActionListener {
     public class MyKeyAdapter extends KeyAdapter {
         @Override
         public void keyPressed(KeyEvent e) {
+
+            playPress("/Users/alwn/IdeaProjects/Snake/sfx/press.wav");
+
             if (startScreen) {
                 // Start the game when Enter or Space is pressed
                 if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_SPACE) {
@@ -260,6 +292,54 @@ public class GamePanel extends JPanel implements ActionListener {
                         break;
                 }
             }
+        }
+    }
+
+    public void playSound(String s) {
+        try {
+            // Load the sound file
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(new File("/Users/alwn/IdeaProjects/Snake/sfx/eat.wav"));
+            Clip eat = AudioSystem.getClip();
+            eat.open(audioStream);
+            eat.start();  // Play the sound
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void playStart(String s) {
+        try {
+            // Load the sound file
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(new File("/Users/alwn/IdeaProjects/Snake/sfx/start.wav"));
+            Clip start = AudioSystem.getClip();
+            start.open(audioStream);
+            start.start();  // Play the sound
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void playEnd(String s) {
+        try {
+            // Load the sound file
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(new File("/Users/alwn/IdeaProjects/Snake/sfx/gameover.wav"));
+            Clip end = AudioSystem.getClip();
+            end.open(audioStream);
+            end.start();  // Play the sound
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void playPress(String s) {
+        try {
+            // Load the sound file
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(new File("/Users/alwn/IdeaProjects/Snake/sfx/press.wav"));
+            Clip end = AudioSystem.getClip();
+            end.open(audioStream);
+            end.start();  // Play the sound
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
         }
     }
 
