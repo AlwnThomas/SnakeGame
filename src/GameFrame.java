@@ -14,7 +14,7 @@ public class GameFrame extends JFrame {
         border.setBackground(new Color(99,136,64));
         border.setLayout(new BorderLayout());
         border.add(gamePanel, BorderLayout.CENTER);
-        border.setBorder(BorderFactory.createEmptyBorder(25,15,15,15));
+        border.setBorder(BorderFactory.createEmptyBorder(20,10,10,10));
 
         this.add(border);
         this.setTitle("Snake");
